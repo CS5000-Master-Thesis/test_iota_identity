@@ -1,14 +1,15 @@
 mod didmanager;
 mod graph;
+mod plotlytest;
 mod utils;
 
-use didmanager::DIDManager;
-use utils::Action;
-// use graph::gen_line_chart;
-// use graph::test_clustered_bar_chart;
+use std::collections::HashMap;
 
-use futures::future::join_all;
-use futures::stream::{self, StreamExt};
+use didmanager::DIDManager;
+use graph::{draw_all_measurements, draw_custom};
+use plotlytest::{box_plot_styling_outliers, fully_styled_box_plot};
+use utils::{Action, IotaTangleNetwork, Measurement};
+
 use log::{info, warn};
 use tokio::task;
 use tokio::time::Instant;
@@ -18,103 +19,88 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     env_logger::init();
 
-    // gen_line_chart();
-    // test_clustered_bar_chart();
+    box_plot_styling_outliers();
 
-    // The API endpoint of an IOTA node, e.g. Hornet.
-    let api_endpoint: &str = "http://localhost";
+    // let num_threads = num_cpus::get();
+    // println!("Number of available logical CPUs: {}", num_threads);
 
-    // The faucet endpoint allows requesting funds for testing purposes.
-    let faucet_endpoint: &str = "http://localhost/faucet/api/enqueue";
+    // let networks = vec![
+    //     IotaTangleNetwork::Localhost,
+    //     // IotaTangleNetwork::ShimmerTestnet,
+    //     // IotaTangleNetwork::IotaTestnet2_0,
+    // ];
 
-    // Define a concurrency level. For example, 10 means up to 10 tasks run in parallel.
-    let number_of_did_managers = 3;
-    let concurrency_level = 3;
+    // let mut all_measurements: HashMap<IotaTangleNetwork, Measurement> = HashMap::new();
 
-    let futures =
-        (0..number_of_did_managers).map(|_| DIDManager::new(api_endpoint, faucet_endpoint));
-    let mut did_managers: Vec<DIDManager> = join_all(futures)
-        .await
-        .into_iter()
-        .collect::<Result<_, _>>()?;
+    // for network in networks {
+    //     let measurements = all_measurements
+    //         .entry(network)
+    //         .or_insert_with(Measurement::new);
+    //     spawn_tasks(measurements, num_threads, network).await?;
+    // }
 
-    let actions = vec![
-        Action::CreateDid,
-        Action::UpdateDid,
-        Action::ResolveDid,
-        Action::DeactivateDid,
-        Action::ReactivateDid,
-        Action::DeleteDid,
-    ];
+    // let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
+    // info!("Result: {} \n", pretty_json);
 
-    let iterations = vec![1];
-    // let iterations = vec![1, 10, 100, 1000, 10000];
-
-    for action in actions {
-        for iter in &iterations {
-            benchmark_operation(
-                &mut did_managers,
-                action.clone(),
-                iter.clone(),
-                concurrency_level,
-            )
-            .await;
-        }
-    }
+    // if let Err(e) = draw_all_measurements(&all_measurements) {
+    //     warn!("Failed generate images: {:?}", e);
+    // }
 
     Ok(())
 }
 
-async fn spawn_tasks() {}
-
-async fn benchmark_operation(
-    did_managers: &mut Vec<DIDManager>,
-    action: Action,
-    iterations: usize,
-    concurrency_level: usize,
-) {
-    let start = Instant::now();
-
+async fn spawn_tasks(
+    measurements: &mut Measurement,
+    num_threads: usize,
+    network: IotaTangleNetwork,
+) -> anyhow::Result<()> {
     let mut handles = vec![];
 
-    for did_manager in did_managers {
-        let action = action.clone();
+    info!(
+        "Starting testing for {}\nAPI: {}\nFaucet: {}",
+        network.name(),
+        network.api_endpoint(),
+        network.faucet_endpoint()
+    );
 
+    for _ in 0..num_threads {
+        let network = network.clone();
         let handle = task::spawn(async move {
-            for index in 0..iterations {
-                match action {
-                    Action::CreateDid => {
-                        if let Err(e) = did_manager.create_did(index).await {
-                            warn!("Failed to create DID: {:?}", e);
-                        }
-                    }
-                    Action::DeleteDid => {
-                        if let Err(e) = did_manager.delete_did(index).await {
-                            warn!("Failed to delete DID: {:?}", e);
-                        }
-                    }
-                    Action::UpdateDid => {
-                        if let Err(e) = did_manager.update_did(index).await {
-                            warn!("Failed to update DID: {:?}", e);
-                        }
-                    }
-                    Action::ResolveDid => {
-                        if let Err(e) = did_manager.resolve_did(index).await {
-                            warn!("Failed to resolve DID: {:?}", e);
-                        }
-                    }
-                    Action::DeactivateDid => {
-                        if let Err(e) = did_manager.deactivate_did(index).await {
-                            warn!("Failed to deactivate DID: {:?}", e);
-                        }
-                    }
-                    Action::ReactivateDid => {
-                        if let Err(e) = did_manager.reactivate_did(index).await {
-                            warn!("Failed to reactivate DID: {:?}", e);
+            let mut measurement = Measurement::new();
+
+            match DIDManager::new(network.api_endpoint(), network.faucet_endpoint()).await {
+                Ok(mut did_manager) => {
+                    let actions = vec![
+                        Action::CreateDid,
+                        Action::UpdateDid,
+                        Action::ResolveDid,
+                        Action::DeactivateDid,
+                        Action::ReactivateDid,
+                        Action::DeleteDid,
+                    ];
+
+                    let iterations = 5;
+
+                    for action in &actions {
+                        let action_measurements =
+                            measurement.entry(*action).or_insert_with(Vec::new);
+
+                        for index in 0..iterations {
+                            let start = Instant::now();
+
+                            benchmark_operation(&mut did_manager, action, index).await;
+
+                            let duration = start.elapsed();
+                            action_measurements.push(duration);
                         }
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to create DIDManager: {:?}", e);
+                }
             }
+
+            measurement
         });
 
         handles.push(handle);
@@ -122,78 +108,49 @@ async fn benchmark_operation(
 
     // Await all the tasks to complete
     for handle in handles {
-        if let Err(e) = handle.await {
-            warn!("Task failed: {:?}", e);
+        let mut result = handle.await.unwrap();
+
+        for (action, durations) in &mut result {
+            let element = measurements.entry(*action).or_insert_with(Vec::new);
+            element.append(durations);
         }
     }
 
-    let duration = start.elapsed();
-    info!(
-        "{} operation took: {:?} for {} iterations with {} threads",
-        action.name(),
-        duration,
-        iterations,
-        concurrency_level
-    );
+    info!("------------------------------------------------");
+    Ok(())
 }
 
-// async fn benchmark_operation(
-//     did_managers: &mut Vec<DIDManager>,
-//     action: Action,
-//     iterations: usize,
-//     concurrency_level: usize,
-// ) {
-//     let start = Instant::now();
-
-//     stream::iter(did_managers)
-//         .for_each_concurrent(concurrency_level, |did_manager| {
-//             let action = action.clone();
-
-//             async move {
-//                 for index in 0..iterations {
-//                     match action {
-//                         Action::CreateDid => {
-//                             if let Err(e) = did_manager.create_did(index).await {
-//                                 warn!("Failed to create DID: {:?}", e);
-//                             }
-//                         }
-//                         Action::DeleteDid => {
-//                             if let Err(e) = did_manager.delete_did(index).await {
-//                                 warn!("Failed to delete DID: {:?}", e);
-//                             }
-//                         }
-//                         Action::UpdateDid => {
-//                             if let Err(e) = did_manager.update_did(index).await {
-//                                 warn!("Failed to update DID: {:?}", e);
-//                             }
-//                         }
-//                         Action::ResolveDid => {
-//                             if let Err(e) = did_manager.resolve_did(index).await {
-//                                 warn!("Failed to resolve DID: {:?}", e);
-//                             }
-//                         }
-//                         Action::DeactivateDid => {
-//                             if let Err(e) = did_manager.deactivate_did(index).await {
-//                                 warn!("Failed to deactivate DID: {:?}", e);
-//                             }
-//                         }
-//                         Action::ReactivateDid => {
-//                             if let Err(e) = did_manager.reactivate_did(index).await {
-//                                 warn!("Failed to reactivate DID: {:?}", e);
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         })
-//         .await;
-
-//     let duration = start.elapsed();
-//     info!(
-//         "{} operation took: {:?} for {} iterations with {} threads",
-//         action.name(),
-//         duration,
-//         iterations,
-//         concurrency_level
-//     );
-// }
+async fn benchmark_operation(did_manager: &mut DIDManager, action: &Action, index: usize) {
+    match action {
+        Action::CreateDid => {
+            if let Err(e) = did_manager.create_did(index).await {
+                warn!("Failed to create DID: {:?}", e);
+            }
+        }
+        Action::DeleteDid => {
+            if let Err(e) = did_manager.delete_did(index).await {
+                warn!("Failed to delete DID: {:?}", e);
+            }
+        }
+        Action::UpdateDid => {
+            if let Err(e) = did_manager.update_did(index).await {
+                warn!("Failed to update DID: {:?}", e);
+            }
+        }
+        Action::ResolveDid => {
+            if let Err(e) = did_manager.resolve_did(index).await {
+                warn!("Failed to resolve DID: {:?}", e);
+            }
+        }
+        Action::DeactivateDid => {
+            if let Err(e) = did_manager.deactivate_did(index).await {
+                warn!("Failed to deactivate DID: {:?}", e);
+            }
+        }
+        Action::ReactivateDid => {
+            if let Err(e) = did_manager.reactivate_did(index).await {
+                warn!("Failed to reactivate DID: {:?}", e);
+            }
+        }
+    }
+}

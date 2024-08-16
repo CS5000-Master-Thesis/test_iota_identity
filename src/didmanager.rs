@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::utils::{get_address_with_funds, random_stronghold_path};
-use anyhow::{anyhow, Ok};
+use anyhow::anyhow;
 use identity_iota::{
     core::Timestamp,
     did::{DIDUrl, DID},
@@ -19,7 +19,6 @@ use iota_sdk::{
     },
 };
 use log::{debug, info};
-use tokio::time::Instant;
 
 struct DIDInformation {
     did: IotaDID,
@@ -39,8 +38,12 @@ pub struct DIDManager {
 
 impl DIDManager {
     pub async fn new(api_endpoint: &str, faucet_endpoint: &str) -> anyhow::Result<Self> {
+        info!("Creating new DIDManager");
+
         // Stronghold snapshot path.
         let path = random_stronghold_path();
+
+        info!("1111");
 
         // Stronghold password.
         let password = Password::from("secure_password".to_owned());
@@ -51,6 +54,8 @@ impl DIDManager {
             .finish()
             .await?;
 
+        info!("2222");
+
         let stronghold = StrongholdSecretManager::builder()
             .password(password.clone())
             .build(path.clone())?;
@@ -59,6 +64,8 @@ impl DIDManager {
         // `StrongholdStorage` creates internally a `SecretManager` that can be
         // referenced to avoid creating multiple instances around the same stronghold snapshot.
         let stronghold_storage = StrongholdStorage::new(stronghold);
+
+        info!("33333");
 
         // Create a DID document.
         let address: Address = get_address_with_funds(
@@ -70,12 +77,16 @@ impl DIDManager {
 
         let network_name: NetworkName = client.network_name().await?;
 
+        info!("4444 {}", network_name);
+
         let storage: Storage<StrongholdStorage, StrongholdStorage> =
             Storage::new(stronghold_storage.clone(), stronghold_storage.clone());
 
         // Create resolver
         let mut resolver = Resolver::<IotaDocument>::new();
         resolver.attach_iota_handler(client.clone());
+
+        info!("555");
 
         Ok(Self {
             client: client,
@@ -89,17 +100,11 @@ impl DIDManager {
     }
 
     pub async fn create_did(&mut self, index: usize) -> anyhow::Result<()> {
-        let start = Instant::now();
-
-        let duration = start.elapsed();
-        info!("11 Create DID operation took: {:?} for {}", duration, index);
+        info!("Creating new DID");
 
         // Create a new DID document with a placeholder DID.
         // The DID will be derived from the Alias Id of the Alias Output after publishing.
         let mut document = IotaDocument::new(&self.network_name);
-
-        let duration = start.elapsed();
-        info!("22 Create DID operation took: {:?} for {}", duration, index);
 
         // Generates a verification method. This will store the key-id as well as the private key
         // in the stronghold file.
@@ -113,9 +118,6 @@ impl DIDManager {
             )
             .await?;
 
-        let duration = start.elapsed();
-        info!("33 Create DID operation took: {:?} for {}", duration, index);
-
         // Construct an Alias Output containing the DID document, with the wallet address
         // set as both the state controller and governor.
         let alias_output: AliasOutput = self
@@ -123,17 +125,11 @@ impl DIDManager {
             .new_did_output(self.address, document, None)
             .await?;
 
-        let duration = start.elapsed();
-        info!("44 Create DID operation took: {:?} for {}", duration, index);
-
         // Publish the Alias Output and get the published DID document.
         let document: IotaDocument = self
             .client
             .publish_did_output(self.stronghold_storage.as_secret_manager(), alias_output)
             .await?;
-
-        let duration = start.elapsed();
-        info!("55 Create DID operation took: {:?} for {}", duration, index);
 
         debug!("DID created: {document:#}");
 
@@ -150,6 +146,8 @@ impl DIDManager {
     }
 
     pub async fn update_did(&mut self, index: usize) -> anyhow::Result<()> {
+        info!("Updating new DID");
+
         match self.did_map.get_mut(&index) {
             Some(did_info) => {
                 // Resolve the latest state of the document.
@@ -215,6 +213,8 @@ impl DIDManager {
     ///
     ///
     pub async fn resolve_did(&self, index: usize) -> anyhow::Result<()> {
+        info!("Resolving DID");
+
         match self.did_map.get(&index) {
             Some(did_info) => {
                 let resolved_document: IotaDocument = self.resolver.resolve(&did_info.did).await?;
@@ -231,6 +231,8 @@ impl DIDManager {
     ///
     ///
     pub async fn deactivate_did(&mut self, index: usize) -> anyhow::Result<()> {
+        info!("Deactivating DID");
+
         match self.did_map.get_mut(&index) {
             Some(did_info) => {
                 let resolved_document: IotaDocument = self.resolver.resolve(&did_info.did).await?;
@@ -273,6 +275,8 @@ impl DIDManager {
     ///
     ///
     pub async fn reactivate_did(&mut self, index: usize) -> anyhow::Result<()> {
+        info!("Reactivating DID");
+
         match self.did_map.get_mut(&index) {
             Some(did_info) => {
                 match &did_info.document {
@@ -314,6 +318,8 @@ impl DIDManager {
     ///
     ///
     pub async fn delete_did(&self, index: usize) -> anyhow::Result<()> {
+        info!("Deleting DID");
+
         match self.did_map.get(&index) {
             Some(did_info) => {
                 // Deletes the Alias Output and its contained DID Document, rendering the DID permanently destroyed.
@@ -328,14 +334,19 @@ impl DIDManager {
                     .await?;
 
                 // Attempting to resolve a deleted DID results in a `NoOutput` error.
-                let error: Error = self.client.resolve_did(&did_info.did).await.unwrap_err();
-
-                assert!(matches!(
-                    error,
-                    identity_iota::iota::Error::DIDResolutionError(iota_sdk::client::Error::Node(
-                        iota_sdk::client::node_api::error::Error::NotFound(..)
-                    ))
-                ));
+                match self.client.resolve_did(&did_info.did).await {
+                    Ok(_) => return Err(anyhow!("DID was not deleted {}", did_info.did)),
+                    Err(err) => {
+                        assert!(matches!(
+                            err,
+                            identity_iota::iota::Error::DIDResolutionError(
+                                iota_sdk::client::Error::Node(
+                                    iota_sdk::client::node_api::error::Error::NotFound(..)
+                                )
+                            )
+                        ));
+                    }
+                }
             }
             None => return Err(anyhow!("No object found at index {}", index)),
         }

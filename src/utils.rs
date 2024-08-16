@@ -11,12 +11,51 @@ use iota_sdk::types::block::address::Address;
 use iota_sdk::types::block::address::Bech32Address;
 use iota_sdk::types::block::address::Hrp;
 use rand::distributions::DistString;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use strum::EnumIter;
 
-type Measurement = HashMap<Action, Vec<std::time::Duration>>;
+pub type Measurement = HashMap<Action, Vec<std::time::Duration>>;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+pub enum IotaTangleNetwork {
+    Localhost,
+    ShimmerTestnet,
+    IotaTestnet2_0,
+}
+
+impl IotaTangleNetwork {
+    pub fn name(&self) -> &'static str {
+        match self {
+            IotaTangleNetwork::Localhost => "Localhost",
+            IotaTangleNetwork::ShimmerTestnet => "Shimmer testnet",
+            IotaTangleNetwork::IotaTestnet2_0 => "IOTA 2.0 testnet",
+        }
+    }
+
+    pub fn api_endpoint(&self) -> &'static str {
+        match self {
+            IotaTangleNetwork::Localhost => "http://localhost",
+            IotaTangleNetwork::ShimmerTestnet => "https://api.testnet.shimmer.network",
+            IotaTangleNetwork::IotaTestnet2_0 => "https://api.nova-testnet.iotaledger.net/",
+        }
+    }
+
+    pub fn faucet_endpoint(&self) -> &'static str {
+        match self {
+            IotaTangleNetwork::Localhost => "http://localhost/faucet/api/enqueue",
+            IotaTangleNetwork::ShimmerTestnet => {
+                "https://faucet.testnet.shimmer.network/api/enqueue"
+            }
+            IotaTangleNetwork::IotaTestnet2_0 => {
+                "https://faucet.nova-testnet.iotaledger.net//api/enqueue"
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, EnumIter)]
 pub enum Action {
     CreateDid,
     DeleteDid,
