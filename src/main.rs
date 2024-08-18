@@ -6,7 +6,7 @@ mod utils;
 use std::collections::HashMap;
 
 use didmanager::DIDManager;
-use graph::{draw_all_measurements, draw_custom};
+use graph::draw_all_measurements;
 use plotlytest::{box_plot_styling_outliers, fully_styled_box_plot};
 use utils::{Action, IotaTangleNetwork, Measurement};
 
@@ -19,32 +19,33 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     env_logger::init();
 
-    box_plot_styling_outliers();
+    let num_threads = num_cpus::get();
+    let iterations = 3;
 
-    // let num_threads = num_cpus::get();
-    // println!("Number of available logical CPUs: {}", num_threads);
+    println!("Number of available logical CPUs: {}", num_threads);
 
-    // let networks = vec![
-    //     IotaTangleNetwork::Localhost,
-    //     // IotaTangleNetwork::ShimmerTestnet,
-    //     // IotaTangleNetwork::IotaTestnet2_0,
-    // ];
+    let networks = vec![
+        // IotaTangleNetwork::Localhost,
+        IotaTangleNetwork::IotaTestnet,
+        IotaTangleNetwork::ShimmerTestnet,
+        // IotaTangleNetwork::IotaTestnet2_0,
+    ];
 
-    // let mut all_measurements: HashMap<IotaTangleNetwork, Measurement> = HashMap::new();
+    let mut all_measurements: HashMap<IotaTangleNetwork, Measurement> = HashMap::new();
 
-    // for network in networks {
-    //     let measurements = all_measurements
-    //         .entry(network)
-    //         .or_insert_with(Measurement::new);
-    //     spawn_tasks(measurements, num_threads, network).await?;
-    // }
+    for network in networks {
+        let measurements = all_measurements
+            .entry(network)
+            .or_insert_with(Measurement::new);
+        spawn_tasks(measurements, num_threads, iterations, network).await?;
+    }
 
-    // let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
-    // info!("Result: {} \n", pretty_json);
+    let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
+    info!("Result: {} \n", pretty_json);
 
-    // if let Err(e) = draw_all_measurements(&all_measurements) {
-    //     warn!("Failed generate images: {:?}", e);
-    // }
+    if let Err(e) = draw_all_measurements(&all_measurements) {
+        warn!("Failed generate images: {:?}", e);
+    }
 
     Ok(())
 }
@@ -52,6 +53,7 @@ async fn main() -> anyhow::Result<()> {
 async fn spawn_tasks(
     measurements: &mut Measurement,
     num_threads: usize,
+    iterations: usize,
     network: IotaTangleNetwork,
 ) -> anyhow::Result<()> {
     let mut handles = vec![];
@@ -65,6 +67,7 @@ async fn spawn_tasks(
 
     for _ in 0..num_threads {
         let network = network.clone();
+        let iterations = iterations.clone();
         let handle = task::spawn(async move {
             let mut measurement = Measurement::new();
 
@@ -78,8 +81,6 @@ async fn spawn_tasks(
                         Action::ReactivateDid,
                         Action::DeleteDid,
                     ];
-
-                    let iterations = 5;
 
                     for action in &actions {
                         let action_measurements =

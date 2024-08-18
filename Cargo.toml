@@ -15,7 +15,7 @@ iota-sdk = { version = "1.1.5", default-features = false, features = ["tls", "cl
 itertools = "0.13.0"
 log = "0.4.22"
 num_cpus = "1.16.0"
-plotly = "0.9.0"
+plotly = { version = "0.9.0", features = ["kaleido"] }
 plotters = "0.3.6"
 rand = "0.8.5"
 rand_distr = "0.4.3"

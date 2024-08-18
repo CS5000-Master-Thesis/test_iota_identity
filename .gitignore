@@ -4,3 +4,5 @@ debug/
 target/
 dist/
 output/
+test/
+test_strongholds/

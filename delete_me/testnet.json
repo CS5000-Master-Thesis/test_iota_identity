@@ -1,0 +1,47 @@
+{
+  "name": "HORNET",
+  "version": "2.0.0",
+  "status": {
+    "isHealthy": true,
+    "latestMilestone": {
+      "index": 2082713,
+      "timestamp": 1723899400,
+      "milestoneId": "0x3a53c6b2ed7a71cc0ac8f2788f25847e88c51009117f11159a685fcca7820c14"
+    },
+    "confirmedMilestone": {
+      "index": 2082713,
+      "timestamp": 1723899400,
+      "milestoneId": "0x3a53c6b2ed7a71cc0ac8f2788f25847e88c51009117f11159a685fcca7820c14"
+    },
+    "pruningIndex": 0
+  },
+  "supportedProtocolVersions": [2],
+  "protocol": {
+    "version": 2,
+    "networkName": "testnet",
+    "bech32Hrp": "tst",
+    "minPowScore": 1500,
+    "belowMaxDepth": 15,
+    "rentStructure": {
+      "vByteCost": 100,
+      "vByteFactorData": 1,
+      "vByteFactorKey": 10
+    },
+    "tokenSupply": "4600000000000000"
+  },
+  "pendingProtocolParameters": [],
+  "baseToken": {
+    "name": "TST",
+    "tickerSymbol": "TST",
+    "unit": "TST",
+    "subunit": "testies",
+    "decimals": 6,
+    "useMetricPrefix": false
+  },
+  "metrics": {
+    "blocksPerSecond": 0.5,
+    "referencedBlocksPerSecond": 1.6666666666666667,
+    "referencedRate": 333.33333333333337
+  },
+  "features": []
+}

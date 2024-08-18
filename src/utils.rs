@@ -21,6 +21,7 @@ pub type Measurement = HashMap<Action, Vec<std::time::Duration>>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum IotaTangleNetwork {
     Localhost,
+    IotaTestnet,
     ShimmerTestnet,
     IotaTestnet2_0,
 }
@@ -29,6 +30,7 @@ impl IotaTangleNetwork {
     pub fn name(&self) -> &'static str {
         match self {
             IotaTangleNetwork::Localhost => "Localhost",
+            IotaTangleNetwork::IotaTestnet => "Iota testnet",
             IotaTangleNetwork::ShimmerTestnet => "Shimmer testnet",
             IotaTangleNetwork::IotaTestnet2_0 => "IOTA 2.0 testnet",
         }
@@ -37,6 +39,7 @@ impl IotaTangleNetwork {
     pub fn api_endpoint(&self) -> &'static str {
         match self {
             IotaTangleNetwork::Localhost => "http://localhost",
+            IotaTangleNetwork::IotaTestnet => "https://api.testnet.iotaledger.net",
             IotaTangleNetwork::ShimmerTestnet => "https://api.testnet.shimmer.network",
             IotaTangleNetwork::IotaTestnet2_0 => "https://api.nova-testnet.iotaledger.net/",
         }
@@ -45,11 +48,12 @@ impl IotaTangleNetwork {
     pub fn faucet_endpoint(&self) -> &'static str {
         match self {
             IotaTangleNetwork::Localhost => "http://localhost/faucet/api/enqueue",
+            IotaTangleNetwork::IotaTestnet => "https://faucet.testnet.iotaledger.net/api/enqueue",
             IotaTangleNetwork::ShimmerTestnet => {
                 "https://faucet.testnet.shimmer.network/api/enqueue"
             }
             IotaTangleNetwork::IotaTestnet2_0 => {
-                "https://faucet.nova-testnet.iotaledger.net//api/enqueue"
+                "https://faucet.nova-testnet.iotaledger.net/api/enqueue"
             }
         }
     }

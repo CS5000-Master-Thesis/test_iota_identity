@@ -108,7 +108,36 @@ pub fn box_plot_styling_outliers() {
         .marker(Marker::new().color(Rgb::new(107, 174, 214)))
         .box_points(BoxPoints::Outliers);
 
-    let layout = Layout::new().title("Box Plot Styling Outliers");
+    let layout = Layout::new()
+        .title("Box Plot Styling Outliers")
+        .y_axis(
+            Axis::new()
+                .auto_range(true)
+                .auto_margin(true)
+                .show_grid(true)
+                .show_line(true)
+                .zero_line(false)
+                .show_dividers(true)
+                // .dtick(5.0)
+                .grid_color(Rgb::new(150, 150, 150))
+                .grid_width(1)
+                .line_color(Rgb::new(0, 0, 0))
+                .line_width(2),
+        )
+        .x_axis(
+            Axis::new()
+                .auto_range(true)
+                .auto_margin(true)
+                .show_grid(false)
+                .show_line(true)
+                .zero_line(false)
+                .show_dividers(true)
+                // .dtick(5.0)
+                .grid_color(Rgb::new(150, 150, 150))
+                .grid_width(1)
+                .line_color(Rgb::new(0, 0, 0))
+                .line_width(2),
+        );
 
     let mut plot = Plot::new();
     plot.set_layout(layout);
