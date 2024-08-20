@@ -47,13 +47,13 @@ pub fn draw_all_measurements(
 }
 
 fn draw_box_plot(folder_name: &str, action: Action, values: &Vec<(String, Vec<f64>)>) {
-    let plot_name = format!("{}/{}_boxplot.png", folder_name, action.name()).replace(" ", "_");
+    let plot_name = format!("{}/{}_boxplot.svg", folder_name, action.name()).replace(" ", "_");
     info!("{}", plot_name);
 
     let plot_title = format!("{} (in seconds)", action.name());
     let mut plot = Plot::new();
     let layout = Layout::new()
-        .title(Title::with_text(plot_title).font(Font::new().size(20)))
+        .title(Title::with_text(plot_title).font(Font::new().size(23)))
         .y_axis(
             Axis::new()
                 .auto_range(true)
@@ -65,7 +65,7 @@ fn draw_box_plot(folder_name: &str, action: Action, values: &Vec<(String, Vec<f6
                 .grid_width(1)
                 .line_color(Rgb::new(0, 0, 0))
                 .line_width(2)
-                .tick_font(Font::new().size(15)),
+                .tick_font(Font::new().size(20)),
         )
         .x_axis(
             Axis::new()
@@ -78,7 +78,7 @@ fn draw_box_plot(folder_name: &str, action: Action, values: &Vec<(String, Vec<f6
                 .grid_width(1)
                 .line_color(Rgb::new(0, 0, 0))
                 .line_width(2)
-                .tick_font(Font::new().size(15)),
+                .tick_font(Font::new().size(20)),
         )
         .margin(Margin::new().left(40).right(30).bottom(80).top(100))
         .paper_background_color(Rgb::new(243, 243, 243))
@@ -97,5 +97,5 @@ fn draw_box_plot(folder_name: &str, action: Action, values: &Vec<(String, Vec<f6
         plot.add_trace(trace);
     }
 
-    plot.write_image(plot_name, ImageFormat::PNG, 800, 600, 1.0);
+    plot.write_image(plot_name, ImageFormat::SVG, 800, 600, 1.0);
 }

@@ -20,7 +20,7 @@ async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let num_threads = num_cpus::get();
-    let iterations = 3;
+    let iterations = 5;
 
     println!("Number of available logical CPUs: {}", num_threads);
 
