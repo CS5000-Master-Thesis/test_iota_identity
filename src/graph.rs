@@ -22,7 +22,7 @@ pub fn draw_all_measurements(
         "test/{}",
         Utc::now().format("%Y-%m-%d_%H-%M-%S").to_string()
     );
-    fs::create_dir(folder_name.clone())?;
+    fs::create_dir_all(folder_name.clone())?;
 
     for action in Action::iter() {
         info!("Enum {}", action.name());
@@ -42,6 +42,15 @@ pub fn draw_all_measurements(
 
         let _ = draw_box_plot(&folder_name, action, &values);
     }
+
+    // let values: Vec<(String, Vec<f64>)> = vec![(
+    //     "test 1".to_string(),
+    //     vec![
+    //         12.0, 12.0, 13.0, 16.0, 6.0, 3.0, 1.0, 6.0, 7.0, 65.0, 8.0, 6.0, 45.0,
+    //     ],
+    // )];
+
+    // let _ = draw_box_plot(&folder_name, Action::CreateDid, &values);
 
     Ok(())
 }

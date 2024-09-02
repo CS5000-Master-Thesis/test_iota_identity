@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use identity_iota::{
     core::Timestamp,
     did::{DIDUrl, DID},
-    iota::{Error, IotaClientExt, IotaDID, IotaDocument, IotaIdentityClientExt, NetworkName},
+    iota::{IotaClientExt, IotaDID, IotaDocument, IotaIdentityClientExt, NetworkName},
     prelude::Resolver,
     storage::{JwkDocumentExt, JwkMemStore, Storage},
     verification::{jws::JwsAlgorithm, MethodRelationship, MethodScope},

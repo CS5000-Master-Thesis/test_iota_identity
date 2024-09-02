@@ -1,13 +1,11 @@
 mod didmanager;
 mod graph;
-mod plotlytest;
 mod utils;
 
 use std::collections::HashMap;
 
 use didmanager::DIDManager;
 use graph::draw_all_measurements;
-use plotlytest::{box_plot_styling_outliers, fully_styled_box_plot};
 use utils::{Action, IotaTangleNetwork, Measurement};
 
 use log::{info, warn};
@@ -19,15 +17,15 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     env_logger::init();
 
-    let num_threads = num_cpus::get();
-    let iterations = 5;
+    let num_threads = std::cmp::min(num_cpus::get(), 2);
+    let iterations = 1;
 
     println!("Number of available logical CPUs: {}", num_threads);
 
     let networks = vec![
-        // IotaTangleNetwork::Localhost,
-        IotaTangleNetwork::IotaTestnet,
-        IotaTangleNetwork::ShimmerTestnet,
+        IotaTangleNetwork::Localhost,
+        // IotaTangleNetwork::IotaTestnet,
+        // IotaTangleNetwork::ShimmerTestnet,
         // IotaTangleNetwork::IotaTestnet2_0,
     ];
 
