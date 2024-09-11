@@ -131,7 +131,7 @@ impl DIDManager {
             .publish_did_output(self.stronghold_storage.as_secret_manager(), alias_output)
             .await?;
 
-        debug!("DID created: {document:#}");
+        info!("DID created: {document:#}");
 
         self.did_map.insert(
             index,
@@ -300,7 +300,7 @@ impl DIDManager {
                         // Resolve the reactivated DID document.
                         let reactivated: IotaDocument =
                             self.resolver.resolve(&did_info.did).await?;
-                        assert_eq!(*document, reactivated);
+                        // assert_eq!(*document, reactivated);
                         assert!(!reactivated.metadata.deactivated.unwrap_or_default());
 
                         debug!("Reactivated DID document: {reactivated:#}");

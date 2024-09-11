@@ -38,6 +38,7 @@ impl IotaTangleNetwork {
 
     pub fn api_endpoint(&self) -> &'static str {
         match self {
+            // IotaTangleNetwork::Localhost => "http://localhost:14265",
             IotaTangleNetwork::Localhost => "http://localhost",
             IotaTangleNetwork::IotaTestnet => "https://api.testnet.iotaledger.net",
             IotaTangleNetwork::ShimmerTestnet => "https://api.testnet.shimmer.network",
@@ -47,6 +48,7 @@ impl IotaTangleNetwork {
 
     pub fn faucet_endpoint(&self) -> &'static str {
         match self {
+            // IotaTangleNetwork::Localhost => "http://localhost:8091/api/enqueue",
             IotaTangleNetwork::Localhost => "http://localhost/faucet/api/enqueue",
             IotaTangleNetwork::IotaTestnet => "https://faucet.testnet.iotaledger.net/api/enqueue",
             IotaTangleNetwork::ShimmerTestnet => {

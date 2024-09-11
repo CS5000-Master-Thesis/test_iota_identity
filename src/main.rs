@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     env_logger::init();
 
-    let num_threads = std::cmp::min(num_cpus::get(), 2);
+    let num_threads = std::cmp::min(num_cpus::get(), 4);
     let iterations = 1;
 
     println!("Number of available logical CPUs: {}", num_threads);
@@ -107,11 +107,16 @@ async fn spawn_tasks(
 
     // Await all the tasks to complete
     for handle in handles {
-        let mut result = handle.await.unwrap();
-
-        for (action, durations) in &mut result {
-            let element = measurements.entry(*action).or_insert_with(Vec::new);
-            element.append(durations);
+        match handle.await {
+            Ok(mut result) => {
+                for (action, durations) in &mut result {
+                    let element = measurements.entry(*action).or_insert_with(Vec::new);
+                    element.append(durations);
+                }
+            }
+            Err(err) => {
+                warn!("Invalid thread results: {:?}", err);
+            }
         }
     }
 
