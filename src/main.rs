@@ -1,6 +1,9 @@
 mod didmanager;
 mod graph;
+mod plotlytest;
 mod utils;
+
+use plotlytest::box_plot_styling_outliers;
 
 use std::collections::HashMap;
 
@@ -17,10 +20,13 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     env_logger::init();
 
-    let num_threads = std::cmp::min(num_cpus::get(), 4);
-    let iterations = 1;
+    // let num_threads = num_cpus::get();
+    let num_threads = std::cmp::min(num_cpus::get(), 3);
+    let iterations = 2;
 
     println!("Number of available logical CPUs: {}", num_threads);
+
+    // box_plot_styling_outliers();
 
     let networks = vec![
         IotaTangleNetwork::Localhost,
@@ -38,8 +44,8 @@ async fn main() -> anyhow::Result<()> {
         spawn_tasks(measurements, num_threads, iterations, network).await?;
     }
 
-    let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
-    info!("Result: {} \n", pretty_json);
+    // let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
+    // info!("Result: {} \n", pretty_json);
 
     if let Err(e) = draw_all_measurements(&all_measurements) {
         warn!("Failed generate images: {:?}", e);

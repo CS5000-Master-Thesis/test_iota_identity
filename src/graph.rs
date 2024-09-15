@@ -25,20 +25,20 @@ pub fn draw_all_measurements(
     fs::create_dir_all(folder_name.clone())?;
 
     for action in Action::iter() {
-        info!("Enum {}", action.name());
+        // info!("Enum {}", action.name());
 
         let mut values: Vec<(String, Vec<f64>)> = Vec::new();
 
         for (network, durations) in measurements {
             if let Some(durations) = durations.get(&action) {
                 // Transform the vector of Durations into a vector of f64 seconds
-                info!("Values: {:?}", durations);
+                // info!("Values: {:?}", durations);
                 let secs_f64: Vec<f64> = durations.iter().map(|d| d.as_secs_f64()).collect();
                 values.push((network.name().to_string(), secs_f64));
             }
         }
 
-        info!("Values {:?}", values);
+        info!("Values for {}: {:?}", action.name(), values);
 
         let _ = draw_box_plot(&folder_name, action, &values);
     }

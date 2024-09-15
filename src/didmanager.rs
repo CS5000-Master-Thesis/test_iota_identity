@@ -131,7 +131,7 @@ impl DIDManager {
             .publish_did_output(self.stronghold_storage.as_secret_manager(), alias_output)
             .await?;
 
-        info!("DID created: {document:#}");
+        debug!("DID created: {document:#}");
 
         self.did_map.insert(
             index,
@@ -146,7 +146,7 @@ impl DIDManager {
     }
 
     pub async fn update_did(&mut self, index: usize) -> anyhow::Result<()> {
-        info!("Updating new DID");
+        info!("Updating DID");
 
         match self.did_map.get_mut(&index) {
             Some(did_info) => {
