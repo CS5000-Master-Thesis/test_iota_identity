@@ -1,38 +1,22 @@
-mod didmanager;
-mod graph;
-mod plotlytest;
-mod utils;
-
-use plotlytest::box_plot_styling_outliers;
-
-use std::collections::HashMap;
-
-use didmanager::DIDManager;
-use graph::draw_all_measurements;
-use utils::{Action, IotaTangleNetwork, Measurement};
-
 use log::{info, warn};
 use tokio::task;
 use tokio::time::Instant;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv()?;
-    env_logger::init();
+use crate::didmanager::DIDManager;
+use crate::graph::{draw_action_measurements, draw_all_measurements};
+use crate::utils::{Action, IotaTangleNetwork, Measurement};
+use std::collections::HashMap;
 
+pub async fn test_public_testnet() -> anyhow::Result<()> {
     // let num_threads = num_cpus::get();
     let num_threads = std::cmp::min(num_cpus::get(), 3);
     let iterations = 2;
 
-    println!("Number of available logical CPUs: {}", num_threads);
-
-    // box_plot_styling_outliers();
+    info!("Number of available logical CPUs: {}", num_threads);
 
     let networks = vec![
-        IotaTangleNetwork::Localhost,
-        // IotaTangleNetwork::IotaTestnet,
-        // IotaTangleNetwork::ShimmerTestnet,
-        // IotaTangleNetwork::IotaTestnet2_0,
+        IotaTangleNetwork::IotaTestnet,
+        IotaTangleNetwork::ShimmerTestnet,
     ];
 
     let mut all_measurements: HashMap<IotaTangleNetwork, Measurement> = HashMap::new();
@@ -50,7 +34,83 @@ async fn main() -> anyhow::Result<()> {
     if let Err(e) = draw_all_measurements(&all_measurements) {
         warn!("Failed generate images: {:?}", e);
     }
+    Ok(())
+}
 
+pub async fn test_localhost() -> anyhow::Result<()> {
+    let iterations = 5;
+    let mut measurements: Measurement = Measurement::new();
+    let mut handles = vec![];
+    let networks = vec![
+        IotaTangleNetwork::LocalhostHornet1,
+        IotaTangleNetwork::LocalhostHornet2,
+        IotaTangleNetwork::LocalhostHornet3,
+        IotaTangleNetwork::LocalhostHornet4,
+    ];
+
+    for network in networks {
+        let network = network.clone();
+        let iterations = iterations.clone();
+        let handle = task::spawn(async move {
+            let mut measurement = Measurement::new();
+
+            match DIDManager::new(network.api_endpoint(), network.faucet_endpoint()).await {
+                Ok(mut did_manager) => {
+                    let actions = vec![
+                        Action::CreateDid,
+                        Action::UpdateDid,
+                        Action::ResolveDid,
+                        Action::DeactivateDid,
+                        Action::ReactivateDid,
+                        Action::DeleteDid,
+                    ];
+
+                    for action in &actions {
+                        let action_measurements =
+                            measurement.entry(*action).or_insert_with(Vec::new);
+
+                        for index in 0..iterations {
+                            let start = Instant::now();
+
+                            benchmark_operation(&mut did_manager, action, index).await;
+
+                            let duration = start.elapsed();
+                            action_measurements.push(duration);
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to create DIDManager: {:?}", e);
+                }
+            }
+
+            measurement
+        });
+
+        handles.push(handle);
+    }
+
+    // Await all the tasks to complete
+    for handle in handles {
+        match handle.await {
+            Ok(mut result) => {
+                for (action, durations) in &mut result {
+                    let element = measurements.entry(*action).or_insert_with(Vec::new);
+                    element.append(durations);
+                }
+            }
+            Err(err) => {
+                warn!("Invalid thread results: {:?}", err);
+            }
+        }
+    }
+
+    // let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
+    // info!("Result: {} \n", pretty_json);
+
+    if let Err(e) = draw_action_measurements(&measurements) {
+        warn!("Failed generate images: {:?}", e);
+    }
     Ok(())
 }
 

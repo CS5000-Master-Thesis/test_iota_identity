@@ -263,7 +263,13 @@ impl DIDManager {
                 // Resolving a deactivated DID returns an empty DID document
                 // with its `deactivated` metadata field set to `true`.
                 let deactivated: IotaDocument = self.resolver.resolve(&did_info.did).await?;
-                assert_eq!(deactivated.metadata.deactivated, Some(true));
+
+                if deactivated.metadata.deactivated != Some(true) {
+                    return Err(anyhow::anyhow!(
+                        "Deactivation check failed: expected `Some(true)`, got `{:?}`",
+                        deactivated.metadata.deactivated
+                    ));
+                }
                 debug!("Deactivated DID document: {deactivated:#}");
             }
             None => return Err(anyhow!("No object found at index {}", index)),
@@ -301,7 +307,12 @@ impl DIDManager {
                         let reactivated: IotaDocument =
                             self.resolver.resolve(&did_info.did).await?;
                         // assert_eq!(*document, reactivated);
-                        assert!(!reactivated.metadata.deactivated.unwrap_or_default());
+
+                        if reactivated.metadata.deactivated.unwrap_or_default() {
+                            return Err(anyhow::anyhow!(
+                                "Reactivation check failed: expected `false`, got `true`"
+                            ));
+                        }
 
                         debug!("Reactivated DID document: {reactivated:#}");
                     }
