@@ -9,6 +9,8 @@ sudo ./bootstrap
 # Bootstrap network (create hornet database, create genesis milestone, create coo state)
 docker compose run bootstrap-network
 
+# Restart spammer when env file is updated 
+docker compose up --force-recreate -d inx-spammer
 ```
 
 - grafana: http://localhost:3000

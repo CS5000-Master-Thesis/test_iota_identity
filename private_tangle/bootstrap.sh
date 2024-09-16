@@ -54,7 +54,7 @@ fi
 docker compose run create-snapshots
 
 # Bootstrap network (create hornet database, create genesis milestone, create coo state)
-# docker compose run bootstrap-network
+docker compose run bootstrap-network
 
 # Duplicate snapshot
 cp -R data/snapshots/hornet/* data/snapshots/hornet-2

@@ -45,6 +45,10 @@ services:
       - "--inx.enabled=true"
       - "--inx.bindAddress=hornet:9029"
       - "--prometheus.enabled=true"
+      - "--prometheus.debugMetrics=true"
+      - "--prometheus.goMetrics=true"
+      - "--prometheus.processMetrics=true"
+      - "--prometheus.promhttpMetrics=true"
       - "--prometheus.bindAddress=hornet:9311"
 
   hornet-2:
@@ -203,83 +207,83 @@ services:
       - inx
       - inx-dashboard
 
-  inx-dashboard-2:
-    container_name: inx-dashboard-2
-    image: iotaledger/inx-dashboard:1.0
-    stop_grace_period: 5m
-    restart: unless-stopped
-    depends_on:
-      hornet-2:
-        condition: service_healthy
-    ports:
-      - "9332:9311/tcp"
-      - "8012:8081/tcp"
-      - "6032:6060/tcp"
-    volumes:
-      - ./data/sandboxdb/dashboard-2:/app/database
-    command:
-      - "--inx.address=hornet-2:9029"
-      - "--dashboard.bindAddress=inx-dashboard-2:8081"
-      - "--dashboard.auth.identityFilePath=database/identity.key"
-      - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
-      - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
-      - "--prometheus.enabled=true"
-      - "--prometheus.bindAddress=inx-dashboard-2:9312"
-    profiles:
-      - inx
-      - inx-dashboard
+  # inx-dashboard-2:
+  #   container_name: inx-dashboard-2
+  #   image: iotaledger/inx-dashboard:1.0
+  #   stop_grace_period: 5m
+  #   restart: unless-stopped
+  #   depends_on:
+  #     hornet-2:
+  #       condition: service_healthy
+  #   ports:
+  #     - "9332:9311/tcp"
+  #     - "8012:8081/tcp"
+  #     - "6032:6060/tcp"
+  #   volumes:
+  #     - ./data/sandboxdb/dashboard-2:/app/database
+  #   command:
+  #     - "--inx.address=hornet-2:9029"
+  #     - "--dashboard.bindAddress=inx-dashboard-2:8081"
+  #     - "--dashboard.auth.identityFilePath=database/identity.key"
+  #     - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
+  #     - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
+  #     - "--prometheus.enabled=true"
+  #     - "--prometheus.bindAddress=inx-dashboard-2:9312"
+  #   profiles:
+  #     - inx
+  #     - inx-dashboard
 
-  inx-dashboard-3:
-    container_name: inx-dashboard-3
-    image: iotaledger/inx-dashboard:1.0
-    stop_grace_period: 5m
-    restart: unless-stopped
-    depends_on:
-      hornet-3:
-        condition: service_healthy
-    ports:
-      - "9333:9311/tcp"
-      - "8013:8081/tcp"
-      - "6033:6060/tcp"
-    volumes:
-      - ./data/sandboxdb/dashboard-3:/app/database
-    command:
-      - "--inx.address=hornet-3:9029"
-      - "--dashboard.bindAddress=inx-dashboard-3:8081"
-      - "--dashboard.auth.identityFilePath=database/identity.key"
-      - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
-      - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
-      - "--prometheus.enabled=true"
-      - "--prometheus.bindAddress=inx-dashboard-3:9312"
-    profiles:
-      - inx
-      - inx-dashboard
+  # inx-dashboard-3:
+  #   container_name: inx-dashboard-3
+  #   image: iotaledger/inx-dashboard:1.0
+  #   stop_grace_period: 5m
+  #   restart: unless-stopped
+  #   depends_on:
+  #     hornet-3:
+  #       condition: service_healthy
+  #   ports:
+  #     - "9333:9311/tcp"
+  #     - "8013:8081/tcp"
+  #     - "6033:6060/tcp"
+  #   volumes:
+  #     - ./data/sandboxdb/dashboard-3:/app/database
+  #   command:
+  #     - "--inx.address=hornet-3:9029"
+  #     - "--dashboard.bindAddress=inx-dashboard-3:8081"
+  #     - "--dashboard.auth.identityFilePath=database/identity.key"
+  #     - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
+  #     - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
+  #     - "--prometheus.enabled=true"
+  #     - "--prometheus.bindAddress=inx-dashboard-3:9312"
+  #   profiles:
+  #     - inx
+  #     - inx-dashboard
 
-  inx-dashboard-4:
-    container_name: inx-dashboard-4
-    image: iotaledger/inx-dashboard:1.0
-    stop_grace_period: 5m
-    restart: unless-stopped
-    depends_on:
-      hornet-4:
-        condition: service_healthy
-    ports:
-      - "9334:9311/tcp"
-      - "8014:8081/tcp"
-      - "6034:6060/tcp"
-    volumes:
-      - ./data/sandboxdb/dashboard-4:/app/database
-    command:
-      - "--inx.address=hornet-3:9029"
-      - "--dashboard.bindAddress=inx-dashboard-4:8081"
-      - "--dashboard.auth.identityFilePath=database/identity.key"
-      - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
-      - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
-      - "--prometheus.enabled=true"
-      - "--prometheus.bindAddress=inx-dashboard-4:9312"
-    profiles:
-      - inx
-      - inx-dashboard
+  # inx-dashboard-4:
+  #   container_name: inx-dashboard-4
+  #   image: iotaledger/inx-dashboard:1.0
+  #   stop_grace_period: 5m
+  #   restart: unless-stopped
+  #   depends_on:
+  #     hornet-4:
+  #       condition: service_healthy
+  #   ports:
+  #     - "9334:9311/tcp"
+  #     - "8014:8081/tcp"
+  #     - "6034:6060/tcp"
+  #   volumes:
+  #     - ./data/sandboxdb/dashboard-4:/app/database
+  #   command:
+  #     - "--inx.address=hornet-3:9029"
+  #     - "--dashboard.bindAddress=inx-dashboard-4:8081"
+  #     - "--dashboard.auth.identityFilePath=database/identity.key"
+  #     - "--dashboard.auth.passwordHash=c4a3fcd2ebec3ac0d105411653284efa9c636e754b9fbbaf58b3adcb974f3655"
+  #     - "--dashboard.auth.passwordSalt=11ed024b8f74191c8484579db15623435c994ae4c28d9ad1b2ad8c1807bf7469"
+  #     - "--prometheus.enabled=true"
+  #     - "--prometheus.bindAddress=inx-dashboard-4:9312"
+  #   profiles:
+  #     - inx
+  #     - inx-dashboard
 
 
   ##################################################################
@@ -454,8 +458,8 @@ services:
     command:
       - "--inx.address=hornet:9029"
       - "--restAPI.bindAddress=inx-spammer:9092"
-      - "--spammer.autostart=true"
-      - "--spammer.bpsRateLimit=50"
+      - "--spammer.autostart=${INX_SPAMMER_ENABLED:-false}"
+      - "--spammer.bpsRateLimit=${INX_SPAMMER_RATE_LIMIT:-500}"
       - "--spammer.cpuMaxUsage=0.0"
       - "--spammer.workers=8"
       - "--spammer.valueSpam.enabled=false"
