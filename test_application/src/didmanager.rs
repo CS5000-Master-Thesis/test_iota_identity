@@ -12,7 +12,10 @@ use identity_iota::{
 };
 use identity_stronghold::StrongholdStorage;
 use iota_sdk::{
-    client::{secret::stronghold::StrongholdSecretManager, Client, Password},
+    client::{
+        api::ClientBlockBuilderOptions, secret::stronghold::StrongholdSecretManager, Client,
+        Password,
+    },
     types::block::{
         address::Address,
         output::{AliasOutput, AliasOutputBuilder, RentStructure},
@@ -77,7 +80,7 @@ impl DIDManager {
 
         let network_name: NetworkName = client.network_name().await?;
 
-        info!("4444 {}", network_name);
+        info!("4444 {} {}", network_name, address);
 
         let storage: Storage<StrongholdStorage, StrongholdStorage> =
             Storage::new(stronghold_storage.clone(), stronghold_storage.clone());
@@ -125,13 +128,15 @@ impl DIDManager {
             .new_did_output(self.address, document, None)
             .await?;
 
+        info!("Alias output: {alias_output:?}");
+
         // Publish the Alias Output and get the published DID document.
         let document: IotaDocument = self
             .client
             .publish_did_output(self.stronghold_storage.as_secret_manager(), alias_output)
             .await?;
 
-        debug!("DID created: {document:#}");
+        info!("DID created: {document:#}");
 
         self.did_map.insert(
             index,

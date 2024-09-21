@@ -1,0 +1,19 @@
+{
+	"id": "default",
+	"lastFixerUpdate": 0,
+	"fiatExchangeRatesEur": {},
+	"coinStats": {
+		"iota": {
+			"price": 0.128493,
+			"marketCap": 442020155,
+			"volume24h": 11911996,
+			"lastUpdate": 1726961162838
+		},
+		"shimmer": {
+			"price": 0.00317635,
+			"marketCap": 4608554.8023744505,
+			"volume24h": 12458.45,
+			"lastUpdate": 1726961163245
+		}
+	}
+}

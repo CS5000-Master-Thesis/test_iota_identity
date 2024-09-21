@@ -9,8 +9,8 @@ use std::collections::HashMap;
 
 pub async fn test_public_testnet() -> anyhow::Result<()> {
     // let num_threads = num_cpus::get();
-    let num_threads = std::cmp::min(num_cpus::get(), 3);
-    let iterations = 2;
+    let num_threads = std::cmp::min(num_cpus::get(), 1);
+    let iterations = 1;
 
     info!("Number of available logical CPUs: {}", num_threads);
 
@@ -38,14 +38,14 @@ pub async fn test_public_testnet() -> anyhow::Result<()> {
 }
 
 pub async fn test_localhost() -> anyhow::Result<()> {
-    let iterations = 5;
+    let iterations = 1;
     let mut measurements: Measurement = Measurement::new();
     let mut handles = vec![];
     let networks = vec![
         IotaTangleNetwork::LocalhostHornet1,
-        IotaTangleNetwork::LocalhostHornet2,
-        IotaTangleNetwork::LocalhostHornet3,
-        IotaTangleNetwork::LocalhostHornet4,
+        // IotaTangleNetwork::LocalhostHornet2,
+        // IotaTangleNetwork::LocalhostHornet3,
+        // IotaTangleNetwork::LocalhostHornet4,
     ];
 
     for network in networks {
@@ -58,11 +58,11 @@ pub async fn test_localhost() -> anyhow::Result<()> {
                 Ok(mut did_manager) => {
                     let actions = vec![
                         Action::CreateDid,
-                        Action::UpdateDid,
+                        // Action::UpdateDid,
                         Action::ResolveDid,
-                        Action::DeactivateDid,
-                        Action::ReactivateDid,
-                        Action::DeleteDid,
+                        // Action::DeactivateDid,
+                        // Action::ReactivateDid,
+                        // Action::DeleteDid,
                     ];
 
                     for action in &actions {

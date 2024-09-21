@@ -1,5 +1,7 @@
+use buildandpostblocktest::run_tasks;
 use testutils::test_localhost;
 
+mod buildandpostblocktest;
 mod didmanager;
 mod graph;
 mod testutils;
@@ -14,6 +16,11 @@ async fn main() -> anyhow::Result<()> {
         log::error!("Error occurred in test_localhost: {:?}", e);
         return Err(e);
     }
+
+    // if let Err(e) = run_tasks().await {
+    //     log::error!("Error occurred in test_localhost: {:?}", e);
+    //     return Err(e);
+    // }
 
     log::info!("Application finished successfully.");
     Ok(())
