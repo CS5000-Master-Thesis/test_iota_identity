@@ -1,9 +1,9 @@
 use log::{info, warn};
 use tokio::task;
-use tokio::time::Instant;
+use tokio::time::{sleep, Duration, Instant};
 
 use crate::didmanager::DIDManager;
-use crate::graph::{draw_action_measurements, draw_all_measurements};
+use crate::graph::draw_all_measurements;
 use crate::utils::{Action, IotaTangleNetwork, Measurement};
 use std::collections::HashMap;
 
@@ -114,8 +114,11 @@ async fn spawn_tasks(
     for _ in 0..num_threads {
         let network = network.clone();
         let iterations = iterations.clone();
+
         let handle = task::spawn(async move {
             let mut measurement = Measurement::new();
+
+            sleep(Duration::from_millis(500)).await; // Wait 500 milliseconds before starting each thread
 
             match DIDManager::new(network.api_endpoint(), network.faucet_endpoint()).await {
                 Ok(mut did_manager) => {

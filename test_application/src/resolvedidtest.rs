@@ -7,12 +7,13 @@ use log::{info, warn};
 
 use crate::{
     didmanager::DIDManager,
+    graph::{draw_action_measurements, get_and_create_folder},
     utils::{Action, IotaTangleNetwork, Measurement},
 };
 use tokio::task;
 use tokio::time::Instant;
 
-pub async fn resolve_did_test() -> anyhow::Result<()> {
+pub async fn resolve_did_test() {
     // Stronghold snapshot path.
     match DIDManager::new(
         IotaTangleNetwork::Localhost.api_endpoint(),
@@ -22,22 +23,24 @@ pub async fn resolve_did_test() -> anyhow::Result<()> {
     {
         Ok(mut did_manager) => {
             let index = 0;
-            did_manager.create_did(index);
+            let _ = did_manager.create_did(index).await;
 
             let did_information = did_manager.did_map.get(&index).unwrap();
             let did: IotaDID = did_information.did.clone();
-            let num_threads = 5;
-            let iterations = 10;
+            let num_threads = 1000;
+            let iterations = 100;
             let mut measurement = Measurement::new();
 
             spawn_tasks(&mut measurement, num_threads, iterations, did).await;
+
+            let folder_name = get_and_create_folder().unwrap();
+
+            draw_action_measurements(IotaTangleNetwork::Localhost, &measurement, folder_name);
         }
         Err(e) => {
             warn!("Failed to create DIDManager: {:?}", e);
         }
     }
-
-    Ok(())
 }
 
 async fn spawn_tasks(
@@ -45,7 +48,7 @@ async fn spawn_tasks(
     num_threads: usize,
     iterations: usize,
     did: IotaDID,
-) -> anyhow::Result<()> {
+) {
     let mut handles = vec![];
 
     for _ in 0..num_threads {
@@ -59,7 +62,6 @@ async fn spawn_tasks(
                 Ok(builder) => match builder.finish().await {
                     Ok(client) => {
                         // Successfully created the client, you can use the client here
-                        println!("Client created successfully!");
 
                         let mut resolver = Resolver::<IotaDocument>::new();
                         resolver.attach_iota_handler(client.clone());
@@ -80,11 +82,11 @@ async fn spawn_tasks(
                         }
                     }
                     Err(e) => {
-                        eprintln!("Error creating the client: {:?}", e);
+                        warn!("Error creating the client: {:?}", e);
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error adding primary node: {:?}", e);
+                    warn!("Error adding primary node: {:?}", e);
                 }
             };
             measurement
@@ -109,5 +111,4 @@ async fn spawn_tasks(
     }
 
     info!("------------------------------------------------");
-    Ok(())
 }

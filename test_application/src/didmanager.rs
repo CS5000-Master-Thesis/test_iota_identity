@@ -160,7 +160,7 @@ impl DIDManager {
             .new_did_output(self.address, document, None)
             .await?;
 
-        info!("Alias output: {alias_output:?}");
+        // info!("Alias output: {alias_output:?}");
 
         // Publish the Alias Output and get the published DID document.
         let document: IotaDocument = self
@@ -168,7 +168,7 @@ impl DIDManager {
             .publish_did_output(self.stronghold_storage.as_secret_manager(), alias_output)
             .await?;
 
-        info!("DID created: {document:#}");
+        debug!("DID created: {document:#}");
 
         self.did_map.insert(
             index,
