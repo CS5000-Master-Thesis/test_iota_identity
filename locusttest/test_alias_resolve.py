@@ -112,7 +112,7 @@ class ResolveAliasUser(HttpUser):
         self.client.get(f"/api/indexer/v1/outputs/alias/{original_alias_id}")
 
     @task
-    def resolve_alias_task(self):
+    def get_output_task(self):
         # https://wiki.iota.org/apis/core/v2/find-an-output-by-its-identifier/
         self.client.get(f"/api/core/v2/outputs/{original_output_id}")
 

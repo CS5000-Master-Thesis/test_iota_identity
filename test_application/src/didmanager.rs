@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::{get_address_with_funds, random_stronghold_path};
+use crate::utils::{get_address_with_funds, random_stronghold_path, Action};
 use anyhow::anyhow;
 use identity_iota::{
     core::Timestamp,
@@ -12,19 +12,16 @@ use identity_iota::{
 };
 use identity_stronghold::StrongholdStorage;
 use iota_sdk::{
-    client::{
-        api::ClientBlockBuilderOptions, secret::stronghold::StrongholdSecretManager, Client,
-        Password,
-    },
+    client::{secret::stronghold::StrongholdSecretManager, Client, Password},
     types::block::{
         address::Address,
         output::{AliasOutput, AliasOutputBuilder, RentStructure},
     },
 };
-use log::{debug, info};
+use log::{debug, info, warn};
 
-struct DIDInformation {
-    did: IotaDID,
+pub struct DIDInformation {
+    pub did: IotaDID,
     fragment: String,
     document: Option<IotaDocument>,
 }
@@ -36,7 +33,7 @@ pub struct DIDManager {
     network_name: NetworkName,
     resolver: Resolver<IotaDocument>,
     storage: Storage<StrongholdStorage, StrongholdStorage>,
-    did_map: HashMap<usize, DIDInformation>,
+    pub did_map: HashMap<usize, DIDInformation>,
 }
 
 impl DIDManager {
@@ -100,6 +97,41 @@ impl DIDManager {
             storage: storage,
             did_map: HashMap::new(),
         })
+    }
+
+    pub async fn run_action(&mut self, action: &Action, index: usize) {
+        match action {
+            Action::CreateDid => {
+                if let Err(e) = self.create_did(index).await {
+                    warn!("Failed to create DID: {:?}", e);
+                }
+            }
+            Action::DeleteDid => {
+                if let Err(e) = self.delete_did(index).await {
+                    warn!("Failed to delete DID: {:?}", e);
+                }
+            }
+            Action::UpdateDid => {
+                if let Err(e) = self.update_did(index).await {
+                    warn!("Failed to update DID: {:?}", e);
+                }
+            }
+            Action::ResolveDid => {
+                if let Err(e) = self.resolve_did(index).await {
+                    warn!("Failed to resolve DID: {:?}", e);
+                }
+            }
+            Action::DeactivateDid => {
+                if let Err(e) = self.deactivate_did(index).await {
+                    warn!("Failed to deactivate DID: {:?}", e);
+                }
+            }
+            Action::ReactivateDid => {
+                if let Err(e) = self.reactivate_did(index).await {
+                    warn!("Failed to reactivate DID: {:?}", e);
+                }
+            }
+        }
     }
 
     pub async fn create_did(&mut self, index: usize) -> anyhow::Result<()> {

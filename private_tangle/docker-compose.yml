@@ -16,8 +16,8 @@ services:
         ipv4_address: 172.18.211.51
     ulimits:
       nofile:
-        soft: 16384
-        hard: 16384
+        soft: 65536
+        hard: 65536
     stop_grace_period: 5m
     ports:
       - "15611:15600/tcp"
@@ -59,8 +59,8 @@ services:
         ipv4_address: 172.18.211.52
     ulimits:
       nofile:
-        soft: 16384
-        hard: 16384
+        soft: 65536
+        hard: 65536
     stop_grace_period: 5m
     ports:
       - "14266:14265/tcp"
@@ -377,6 +377,10 @@ services:
     image: iotaledger/inx-indexer:1.0
     stop_grace_period: 5m
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       hornet:
         condition: service_healthy
@@ -398,6 +402,10 @@ services:
     image: iotaledger/inx-mqtt:1.0
     stop_grace_period: 5m
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       hornet:
         condition: service_healthy
@@ -424,8 +432,8 @@ services:
         condition: service_healthy
     ulimits:
       nofile:
-        soft: 16384
-        hard: 16384
+        soft: 65536
+        hard: 65536
     ports:
       - "9892:9892/tcp"
       - "6025:6060/tcp"
@@ -442,6 +450,10 @@ services:
     container_name: inx-spammer
     image: iotaledger/inx-spammer:1.0
     stop_grace_period: 5m
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       hornet:
         condition: service_healthy
@@ -473,6 +485,10 @@ services:
     image: iotaledger/inx-poi:1.0
     stop_grace_period: 5m
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       hornet:
         condition: service_healthy
@@ -491,6 +507,10 @@ services:
         condition: service_healthy
       inx-indexer:
         condition: service_started
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     restart: on-failure
     ports:
       - "8091:8091/tcp"

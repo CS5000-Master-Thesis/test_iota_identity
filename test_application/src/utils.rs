@@ -21,10 +21,6 @@ pub type Measurement = HashMap<Action, Vec<std::time::Duration>>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum IotaTangleNetwork {
     Localhost,
-    LocalhostHornet1,
-    LocalhostHornet2,
-    LocalhostHornet3,
-    LocalhostHornet4,
     IotaTestnet,
     ShimmerTestnet,
     IotaTestnet2_0,
@@ -34,10 +30,6 @@ impl IotaTangleNetwork {
     pub fn name(&self) -> &'static str {
         match self {
             IotaTangleNetwork::Localhost => "Localhost",
-            IotaTangleNetwork::LocalhostHornet1 => "Hornet 1",
-            IotaTangleNetwork::LocalhostHornet2 => "Hornet 2",
-            IotaTangleNetwork::LocalhostHornet3 => "Hornet 3",
-            IotaTangleNetwork::LocalhostHornet4 => "Hornet 4",
             IotaTangleNetwork::IotaTestnet => "Iota testnet",
             IotaTangleNetwork::ShimmerTestnet => "Shimmer testnet",
             IotaTangleNetwork::IotaTestnet2_0 => "IOTA 2.0 testnet",
@@ -47,11 +39,7 @@ impl IotaTangleNetwork {
     pub fn api_endpoint(&self) -> &'static str {
         match self {
             // IotaTangleNetwork::Localhost => "http://localhost:14265",
-            IotaTangleNetwork::Localhost => "http://localhost",
-            IotaTangleNetwork::LocalhostHornet1 => "http://localhost:14265",
-            IotaTangleNetwork::LocalhostHornet2 => "http://localhost:14265",
-            IotaTangleNetwork::LocalhostHornet3 => "http://localhost:14265",
-            IotaTangleNetwork::LocalhostHornet4 => "http://localhost:14265",
+            IotaTangleNetwork::Localhost => "http://localhost:14265",
             IotaTangleNetwork::IotaTestnet => "https://api.testnet.iotaledger.net",
             IotaTangleNetwork::ShimmerTestnet => "https://api.testnet.shimmer.network",
             IotaTangleNetwork::IotaTestnet2_0 => "https://api.nova-testnet.iotaledger.net/",
@@ -61,11 +49,7 @@ impl IotaTangleNetwork {
     pub fn faucet_endpoint(&self) -> &'static str {
         match self {
             // IotaTangleNetwork::Localhost => "http://localhost:8091/api/enqueue",
-            IotaTangleNetwork::Localhost => "http://localhost/faucet/api/enqueue",
-            IotaTangleNetwork::LocalhostHornet1 => "http://localhost:8091/api/enqueue",
-            IotaTangleNetwork::LocalhostHornet2 => "http://localhost:8091/api/enqueue",
-            IotaTangleNetwork::LocalhostHornet3 => "http://localhost:8091/api/enqueue",
-            IotaTangleNetwork::LocalhostHornet4 => "http://localhost:8091/api/enqueue",
+            IotaTangleNetwork::Localhost => "http://localhost:8091/api/enqueue",
             IotaTangleNetwork::IotaTestnet => "https://faucet.testnet.iotaledger.net/api/enqueue",
             IotaTangleNetwork::ShimmerTestnet => {
                 "https://faucet.testnet.shimmer.network/api/enqueue"
@@ -202,4 +186,15 @@ pub fn random_stronghold_path() -> PathBuf {
     file.push(rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), 32));
     file.set_extension("stronghold");
     file.to_owned()
+}
+
+pub fn utf8_to_hex(utf8_data: &str) -> String {
+    // Convert the UTF-8 string to bytes and then format as hex
+    let hex_string: String = utf8_data
+        .as_bytes() // Get the UTF-8 byte representation
+        .iter() // Iterate over the bytes
+        .map(|byte| format!("{:02x}", byte)) // Format each byte as a two-digit hex value
+        .collect(); // Collect into a single string
+
+    format!("0x{}", hex_string) // Prepend with "0x" for hex notation
 }
