@@ -39,8 +39,8 @@ account.set_default_sync_options( SyncOptions(sync_only_most_basic_outputs=True)
 address = account.generate_ed25519_addresses(1)[0]
 faucet_response = wallet.get_client().request_funds_from_faucet( FAUCET_URL, address.address)
 
-print('Address:', address.address)
 print('MetaData', account.get_metadata())
+print('Address:', address.address)
 # print(faucet_response)
 
 # Verify we have received tokens from faucet
@@ -81,6 +81,8 @@ print(f'original_alias_id: {original_alias_id}')
 
 original_alias_id_bech32 = Utils.alias_id_to_bech32(original_alias_id, wallet.get_client().get_bech32_hrp())
 print(f'original_alias_id_bech32: {original_alias_id_bech32}')
+
+print(f'\nAlias output available at:\nhttp://localhost:8011/dashboard/explorer/address/{original_alias_id_bech32}\n')
 
 # Cleanup 
 wallet.destroy()

@@ -1,0 +1,25 @@
+# Name: REST Client
+# Id: humao.rest-client
+# Description: REST Client for Visual Studio Code
+# Version: 0.25.1
+# Publisher: Huachao Mao
+# VS Marketplace Link: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+
+### Localhost (private_tangle)
+GET http://localhost:14265/api/core/v2/info
+
+### IOTA Mainnet
+GET https://api.stardust-mainnet.iotaledger.net/api/core/v2/info
+
+### IOTA Testnet
+GET https://api.testnet.iotaledger.net/api/core/v2/info
+
+### Shimmer
+GET https://api.shimmer.network/api/core/v2/info
+
+### Shimmer testnet
+GET https://api.testnet.shimmer.network/api/core/v2/info
+
+### IOTA 2.0 Testnet
+GET https://api.nova-testnet.iotaledger.net/api/core/v3/info
+

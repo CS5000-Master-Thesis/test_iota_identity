@@ -10,17 +10,33 @@ use iota_sdk::crypto::keys::bip39;
 use iota_sdk::types::block::address::Address;
 use iota_sdk::types::block::address::Bech32Address;
 use iota_sdk::types::block::address::Hrp;
+use log::info;
 use rand::distributions::DistString;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::io::{self, Write};
 use std::path::PathBuf;
 use strum::EnumIter;
 
 pub type Measurement = HashMap<Action, Vec<std::time::Duration>>;
+pub struct MeasurementResult {
+    pub measurement: Measurement,
+    pub failures: usize,
+}
+
+impl MeasurementResult {
+    pub fn new() -> Self {
+        Self {
+            measurement: Measurement::new(),
+            failures: 0,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum IotaTangleNetwork {
     Localhost,
+    Localhost2,
     IotaTestnet,
     ShimmerTestnet,
     IotaTestnet2_0,
@@ -30,6 +46,7 @@ impl IotaTangleNetwork {
     pub fn name(&self) -> &'static str {
         match self {
             IotaTangleNetwork::Localhost => "Localhost",
+            IotaTangleNetwork::Localhost2 => "Localhost 2",
             IotaTangleNetwork::IotaTestnet => "Iota testnet",
             IotaTangleNetwork::ShimmerTestnet => "Shimmer testnet",
             IotaTangleNetwork::IotaTestnet2_0 => "IOTA 2.0 testnet",
@@ -38,8 +55,8 @@ impl IotaTangleNetwork {
 
     pub fn api_endpoint(&self) -> &'static str {
         match self {
-            // IotaTangleNetwork::Localhost => "http://localhost:14265",
             IotaTangleNetwork::Localhost => "http://localhost:14265",
+            IotaTangleNetwork::Localhost2 => "http://localhost:14266",
             IotaTangleNetwork::IotaTestnet => "https://api.testnet.iotaledger.net",
             IotaTangleNetwork::ShimmerTestnet => "https://api.testnet.shimmer.network",
             IotaTangleNetwork::IotaTestnet2_0 => "https://api.nova-testnet.iotaledger.net/",
@@ -48,8 +65,8 @@ impl IotaTangleNetwork {
 
     pub fn faucet_endpoint(&self) -> &'static str {
         match self {
-            // IotaTangleNetwork::Localhost => "http://localhost:8091/api/enqueue",
             IotaTangleNetwork::Localhost => "http://localhost:8091/api/enqueue",
+            IotaTangleNetwork::Localhost2 => "http://localhost:8091/api/enqueue",
             IotaTangleNetwork::IotaTestnet => "https://faucet.testnet.iotaledger.net/api/enqueue",
             IotaTangleNetwork::ShimmerTestnet => {
                 "https://faucet.testnet.shimmer.network/api/enqueue"
@@ -69,6 +86,10 @@ pub enum Action {
     DeactivateDid,
     ReactivateDid,
     ResolveDid,
+    CreateAndPostBlock,
+    nodes_2,
+    nodes_3,
+    nodes_4,
 }
 
 impl Action {
@@ -80,6 +101,10 @@ impl Action {
             Action::DeactivateDid => "Deactivate DID",
             Action::ReactivateDid => "Reactivate DID",
             Action::ResolveDid => "Resolve DID",
+            Action::CreateAndPostBlock => "Create and Post Block",
+            Action::nodes_2 => "2 Nodes",
+            Action::nodes_3 => "3 Nodes",
+            Action::nodes_4 => "4 Nodes",
         }
     }
 }
@@ -197,4 +222,53 @@ pub fn utf8_to_hex(utf8_data: &str) -> String {
         .collect(); // Collect into a single string
 
     format!("0x{}", hex_string) // Prepend with "0x" for hex notation
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct Stats {
+    pub min: f64,
+    pub max: f64,
+    pub average: f64,
+}
+
+pub fn calculate_stats(numbers: Vec<f64>) -> Stats {
+    if numbers.is_empty() {
+        // Return default values if the vector is empty
+        return Stats {
+            min: f64::INFINITY,
+            max: f64::NEG_INFINITY,
+            average: 0.0,
+        };
+    }
+
+    // Calculate the minimum value
+    let min_value = numbers.iter().cloned().fold(f64::INFINITY, f64::min);
+
+    // Calculate the maximum value
+    let max_value = numbers.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+
+    // Calculate the average value
+    let sum: f64 = numbers.iter().sum();
+    let count = numbers.len();
+    let average_value = sum / count as f64;
+
+    // Return the Stats struct with the calculated values
+    Stats {
+        min: min_value,
+        max: max_value,
+        average: average_value,
+    }
+}
+
+pub fn wait_until_enter_pressed() {
+    info!("Press Enter to continue...");
+
+    // Flush the output buffer to ensure the message is printed before waiting for input
+    io::stdout().flush().unwrap();
+
+    // Wait for user input (pressing Enter)
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    info!("Continuing...");
 }

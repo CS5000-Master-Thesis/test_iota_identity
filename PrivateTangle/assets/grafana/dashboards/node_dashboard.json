@@ -673,7 +673,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{name=\"hornet\"}[5m]))/sum(machine_cpu_cores)*100",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{name=\"hornet\"}[$__rate_interval]))/sum(machine_cpu_cores)*100",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -1425,7 +1425,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "(sum by (name) (rate(container_cpu_usage_seconds_total{name=~\".+\"}[5m]))) / scalar(machine_cpu_cores) * 100",
+          "expr": "(sum by (name) (rate(container_cpu_usage_seconds_total{name=~\".+\"}[$__rate_interval]))) / scalar(sum(machine_cpu_cores)) * 100",
           "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"

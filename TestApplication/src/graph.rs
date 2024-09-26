@@ -1,5 +1,5 @@
 use anyhow::Ok;
-use chrono::Utc;
+use chrono::{format::format, Utc};
 use log::info;
 use std::collections::HashMap;
 use std::fs;
@@ -30,17 +30,13 @@ pub fn draw_all_measurements(
     let folder_name = get_and_create_folder().unwrap();
 
     for (network, durations) in measurements {
-        draw_action_measurements(network.clone(), durations, folder_name.clone());
+        draw_action_measurements(network.name(), durations, folder_name.clone());
     }
 
     Ok(())
 }
 
-pub fn draw_action_measurements(
-    iota_tangle_network: IotaTangleNetwork,
-    measurements: &Measurement,
-    folder_name: String,
-) {
+pub fn draw_action_measurements(title: &str, measurements: &Measurement, folder_name: String) {
     let mut values: Vec<(String, Vec<f64>)> = Vec::new();
 
     for action in Action::iter() {
@@ -52,24 +48,17 @@ pub fn draw_action_measurements(
         }
     }
 
-    let _ = draw_box_plot(&folder_name, iota_tangle_network, &values);
+    let _ = draw_box_plot(&folder_name, title, &values);
 }
 
-fn draw_box_plot(
-    folder_name: &str,
-    iota_tangle_network: IotaTangleNetwork,
-    values: &Vec<(String, Vec<f64>)>,
-) {
-    let plot_name =
-        format!("{}/{}_boxplot.png", folder_name, iota_tangle_network.name()).replace(" ", "_");
-    info!("{}", plot_name);
-
-    let plot_title = format!("{} (in seconds)", iota_tangle_network.name());
+fn draw_box_plot(folder_name: &str, title: &str, values: &Vec<(String, Vec<f64>)>) {
+    let plot_title = format!("{}", title);
     let mut plot = Plot::new();
     let layout = Layout::new()
-        .title(Title::with_text(plot_title).font(Font::new().size(23)))
+        .title(Title::with_text(plot_title).font(Font::new().size(22)))
         .y_axis(
             Axis::new()
+                .title(Title::with_text("Time (seconds)").font(Font::new().size(20)))
                 .auto_range(true)
                 .auto_margin(true)
                 .show_grid(true)
@@ -79,7 +68,7 @@ fn draw_box_plot(
                 .grid_width(1)
                 .line_color(Rgb::new(0, 0, 0))
                 .line_width(2)
-                .tick_font(Font::new().size(20)),
+                .tick_font(Font::new().size(17).color("#898989")),
         )
         .x_axis(
             Axis::new()
@@ -92,9 +81,9 @@ fn draw_box_plot(
                 .grid_width(1)
                 .line_color(Rgb::new(0, 0, 0))
                 .line_width(2)
-                .tick_font(Font::new().size(20)),
+                .tick_font(Font::new().size(17).color("#898989")),
         )
-        .margin(Margin::new().left(40).right(30).bottom(80).top(100))
+        .margin(Margin::new().left(10).right(10).bottom(20).top(50))
         .paper_background_color(Rgb::new(243, 243, 243))
         .plot_background_color(Rgb::new(243, 243, 243))
         .show_legend(false);
@@ -111,7 +100,13 @@ fn draw_box_plot(
         plot.add_trace(trace);
     }
 
-    plot.write_image(plot_name, ImageFormat::PNG, 1100, 600, 1.0);
+    let plot_name = format!("{}/{}_boxplot", folder_name, title).replace(" ", "_");
+    let plot_name_png = format!("{}.png", plot_name);
+    let plot_name_svg = format!("{}.svg", plot_name);
+    info!("{}", plot_name);
+
+    plot.write_image(plot_name_png, ImageFormat::PNG, 1100, 400, 1.0);
+    plot.write_image(plot_name_svg, ImageFormat::SVG, 1100, 400, 1.0);
 }
 
 // fn draw_box_plot2(folder_name: &str, title: &str, values: &Vec<(String, Vec<f64>)>) {

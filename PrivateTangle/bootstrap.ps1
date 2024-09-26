@@ -21,6 +21,7 @@ $dirs = @(
     "data\sandboxdb\hornet-4",
     "data\sandboxdb\state",
     "data\sandboxdb\indexer",
+    "data\sandboxdb\indexer-2",
     "data\sandboxdb\participation",
     "data\snapshots\hornet",
     "data\snapshots\hornet-2",

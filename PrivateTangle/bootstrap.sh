@@ -32,6 +32,7 @@ mkdir -p data/sandboxdb/hornet-3
 mkdir -p data/sandboxdb/hornet-4
 mkdir -p data/sandboxdb/state
 mkdir -p data/sandboxdb/indexer
+mkdir -p data/sandboxdb/indexer-2
 mkdir -p data/sandboxdb/participation
 mkdir -p data/snapshots/hornet
 mkdir -p data/snapshots/hornet-2

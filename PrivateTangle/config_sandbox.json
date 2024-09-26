@@ -50,8 +50,13 @@
       ],
       "protectedRoutes": [],
       "pow": {
-        "enabled": true
+        "enabled": false,
+        "workerCount": 0
       },
-      "debugRequestLoggerEnabled": false
+      "debugRequestLoggerEnabled": false,
+      "limits": {
+        "maxBodyLength": "1M",
+        "maxResults": 10000
+      }
     }
   }

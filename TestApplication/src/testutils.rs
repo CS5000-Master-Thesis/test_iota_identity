@@ -4,7 +4,7 @@ use tokio::time::{sleep, Duration, Instant};
 
 use crate::didmanager::DIDManager;
 use crate::graph::draw_all_measurements;
-use crate::utils::{Action, IotaTangleNetwork, Measurement};
+use crate::utils::{calculate_stats, Action, IotaTangleNetwork, Measurement};
 use std::collections::HashMap;
 
 pub async fn run_test(
@@ -23,6 +23,26 @@ pub async fn run_test(
 
     // let pretty_json = serde_json::to_string_pretty(&all_measurements).unwrap();
     // info!("Result: {} \n", pretty_json);
+
+    for (network, measurement) in &all_measurements {
+        println!("Test results for {}", network.name());
+        println!(
+            "{0: <15} | {1: <10} | {2: <10} | {3: <10}",
+            "Action", "Min", "Max", "Average"
+        );
+        for (action, durations) in measurement {
+            let secs_f64: Vec<f64> = durations.iter().map(|d| d.as_secs_f64()).collect();
+            let stats = calculate_stats(secs_f64);
+
+            println!(
+                "{0: <15} | {1: <10.3} | {2: <10.3} | {3: <10.3}",
+                action.name(),
+                stats.min,
+                stats.max,
+                stats.average
+            );
+        }
+    }
 
     if let Err(e) = draw_all_measurements(&all_measurements) {
         warn!("Failed generate images: {:?}", e);
@@ -118,7 +138,7 @@ async fn spawn_tasks(
         let handle = task::spawn(async move {
             let mut measurement = Measurement::new();
 
-            sleep(Duration::from_millis(500)).await; // Wait 500 milliseconds before starting each thread
+            // sleep(Duration::from_millis(500)).await; // Wait 500 milliseconds before starting each thread
 
             match DIDManager::new(network.api_endpoint(), network.faucet_endpoint()).await {
                 Ok(mut did_manager) => {

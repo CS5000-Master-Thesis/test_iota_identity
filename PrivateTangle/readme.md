@@ -1,19 +1,59 @@
-# Readme
+# Setup Private tangle
 
-# Running using Docker desktop on Windows using WSL 2 as backend
+Based on [IOTA Hornet](https://github.com/iotaledger/hornet) and [IOTA Sandbox](https://github.com/iotaledger/iota-sandbox)
+
+### Prerequisites
+
+- Install [Docker](https://docs.docker.com/engine/install/)
+
+#### Configure the tangle
+
+- Remote PoW can be set in [.env](.env) and modify ENABLE_REMOTE_POW
+  > NB: Changing the environments require a restart of the private tangle.
+- minPoWScore can be edited in [protocol_parameters.json](./protocol_parameters.json)
+  > NB: Changing the protocol_parameters.json require the network the be bootstraped again.
+
+## Start Private Tangle
+
+Make sure docker is running, then run the appropriate commands for your operating system.
+
+#### Windows Powershell
+
+```shell
+# Bootstrap
+./bootstrap.ps1
+
+# Start the containers
+docker compose up -d
+```
+
+#### Linux
 
 ```shell
 # Bootstrap
 sudo ./bootstrap
 
-# Bootstrap network (create hornet database, create genesis milestone, create coo state)
-docker compose run bootstrap-network
+# Start the containers
+sudo docker compose up -d
+```
+
+#### Useful commands
+
+```shell
+# Stop the containers
+docker compose down
 
 # Restart spammer when env file is updated
 docker compose up --force-recreate -d inx-spammer
 ```
 
-- grafana: http://localhost:3000
+## Test API Requests
+
+[api_requests.rest](api_requests.rest) is an easy way of testing API requests.
+
+# Useful links
+
+- grafana: http://localhost:3000 (username: admin, password: admin)
 - prometheus: http://localhost:9090
 - explorer: http://localhost:8085
 - inx-faucet:

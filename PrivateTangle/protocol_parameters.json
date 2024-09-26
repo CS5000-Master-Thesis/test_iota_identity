@@ -2,7 +2,7 @@
     "version": 2,
     "networkName": "sandbox1",
     "bech32HRP": "snd",
-    "minPoWScore": 0,
+    "minPoWScore": 1500,
     "belowMaxDepth": 15,
     "rentStructure": {
       "vByteCost": 500,
