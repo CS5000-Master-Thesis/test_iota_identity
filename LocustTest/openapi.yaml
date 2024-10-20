@@ -1,0 +1,77 @@
+openapi: 3.0.0
+info:
+  title: IOTA APIs
+  description: APIs to retrieve the current unspent alias output and find an output by its identifier.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:14265
+    description: Local IOTA Node
+
+paths:
+  /api/indexer/v1/outputs/alias/{aliasId}:
+    get:
+      summary: Get Current Unspent Alias Output
+      description: Returns the output ID of the current unspent alias output for the provided alias ID.
+      parameters:
+        - name: aliasId
+          in: path
+          required: true
+          description: The Alias ID to query.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  outputId:
+                    type: string
+                    description: The current unspent alias output ID.
+        '400':
+          description: Bad Request - Invalid Alias ID
+        '404':
+          description: Alias not found
+        '500':
+          description: Internal Server Error
+
+  /api/core/v2/outputs/{outputId}:
+    get:
+      summary: Find Output by Identifier
+      description: Returns the output details for the provided output ID.
+      parameters:
+        - name: outputId
+          in: path
+          required: true
+          description: The Output ID to query.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: object
+                    description: Output details.
+                    properties:
+                      outputId:
+                        type: string
+                        description: The ID of the output.
+                      blockId:
+                        type: string
+                        description: The block ID containing the output.
+                      isSpent:
+                        type: boolean
+                        description: Whether the output has been spent.
+        '400':
+          description: Bad Request - Invalid Output ID
+        '404':
+          description: Output not found
+        '500':
+          description: Internal Server Error

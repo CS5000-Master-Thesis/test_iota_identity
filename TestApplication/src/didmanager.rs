@@ -51,6 +51,8 @@ impl DIDManager {
 
         // Create a new client to interact with the IOTA ledger.
         let client: Client = Client::builder()
+            // .with_local_pow(false)
+            // .with_fallback_to_local_pow(false)
             .with_primary_node(api_endpoint, None)?
             .finish()
             .await?;
@@ -102,8 +104,8 @@ impl DIDManager {
 
     pub fn print_did_if_exist(&mut self, index: usize) {
         match self.did_map.get(&index) {
-            Some(did_info) => info!("DID at index {} : {}", index, did_info.did),
-            None => info!("No DID found at index {}", index),
+            Some(did_info) => warn!("DID at index {} : {}", index, did_info.did),
+            None => warn!("No DID found at index {}", index),
         }
     }
 

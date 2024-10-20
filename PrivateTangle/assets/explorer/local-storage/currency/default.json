@@ -4,16 +4,16 @@
 	"fiatExchangeRatesEur": {},
 	"coinStats": {
 		"iota": {
-			"price": 0.128493,
-			"marketCap": 442020155,
-			"volume24h": 11911996,
-			"lastUpdate": 1726961162838
+			"price": 0.104404,
+			"marketCap": 363193230,
+			"volume24h": 15169326,
+			"lastUpdate": 1727943899248
 		},
 		"shimmer": {
-			"price": 0.00317635,
-			"marketCap": 4608554.8023744505,
-			"volume24h": 12458.45,
-			"lastUpdate": 1726961163245
+			"price": 0.00259475,
+			"marketCap": 3764713.45206325,
+			"volume24h": 8328.06,
+			"lastUpdate": 1727943899527
 		}
 	}
 }

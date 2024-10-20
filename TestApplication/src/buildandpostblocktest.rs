@@ -1,41 +1,133 @@
+use std::{
+    collections::HashMap,
+    process::{Command, Stdio},
+};
+
 use iota_sdk::client::{api::ClientBlockBuilderOptions, Client};
 use log::{info, warn};
+use serde::Serialize;
+use serde_json::to_string_pretty;
+use strum::IntoEnumIterator;
 use tokio::time::{sleep, Duration, Instant};
 
 use crate::{
     graph::{draw_action_measurements, get_and_create_folder},
     utils::{
-        calculate_stats, utf8_to_hex, wait_until_enter_pressed, Action, IotaTangleNetwork,
-        Measurement, MeasurementResult,
+        calculate_stats, print_measurement_stats, save_to_raw_data_file, save_to_results_file,
+        utf8_to_hex, wait_until_enter_pressed, Action, IotaTangleNetwork, Measurement,
+        MeasurementResult, Stats,
     },
 };
 
-pub async fn run_for_all_nodes_configurations_block_test() {
+#[derive(Debug, Clone, Copy, Serialize)]
+struct BuildBlockAndPublishStatResult {
+    pub blocks: usize,
+    pub bps: f64,
+    pub duartion: f64,
+    pub failures: usize,
+    pub stats: Stats,
+}
+
+pub async fn run_for_all_nodes_configurations_block_test(
+    number_of_tasks: usize,
+    number_of_iterations: usize,
+    local_pow: bool,
+    min_pow_score: usize,
+) {
     let configurations = vec![Action::nodes_4, Action::nodes_3, Action::nodes_2];
     let mut measurement = Measurement::new();
+    let mut result_stats: HashMap<Action, BuildBlockAndPublishStatResult> = HashMap::new();
+    let mut start_node_number = 4;
 
     for (index, action) in configurations.iter().enumerate() {
-        build_and_post_block_test(&action, &mut measurement).await;
+        build_and_post_block_test(
+            &action,
+            &mut measurement,
+            &mut result_stats,
+            number_of_tasks,
+            number_of_iterations,
+            local_pow,
+        )
+        .await;
 
+        // Turn off one node
         if index != configurations.len() - 1 {
-            info!("Turn off one node.");
-            wait_until_enter_pressed();
+            let image_name = format!("hornet-{}", start_node_number);
+            start_node_number -= 1;
+            info!("Turn off one node {}", image_name);
+
+            let result = Command::new("docker")
+                .arg("compose")
+                .arg("stop")
+                .arg(image_name)
+                .current_dir("../PrivateTangle")
+                .status();
+
+            match result {
+                Ok(output) => {
+                    // let stdout = String::from_utf8_lossy(&output.stdout);
+                    info!("Command Output:\n{}", output);
+                }
+                Err(e) => {
+                    warn!("Failed to execute command: {}", e);
+                }
+            }
+            sleep(Duration::from_secs(10)).await;
         }
     }
 
     let folder_name = get_and_create_folder().unwrap();
-    draw_action_measurements(
-        &Action::CreateAndPostBlock.name(),
-        &measurement,
-        folder_name,
+    let json_data = to_string_pretty(&measurement).unwrap();
+    if let Err(e) = save_to_raw_data_file(json_data, &folder_name) {
+        warn!("Error when saving file: {}", e);
+    }
+    let json_data = to_string_pretty(&result_stats).unwrap();
+    if let Err(e) = save_to_results_file(json_data, &folder_name) {
+        warn!("Error when saving file: {}", e);
+    }
+
+    println!("Local PoW {}", local_pow);
+    println!("Min PoW Score {}", min_pow_score);
+
+    println!(
+        "{0: <10} | {1: <10} | {2: <10} | {3: <10} | {4: <10} | {5: <10} | {6: <10} | {7: <10} | {8: <10}",
+        "Action", "Blocks", "Error", "Duration", "BPS", "Min", "Max", "Mean", "Variance"
     );
+    for action in Action::iter() {
+        if let Some(stats) = result_stats.get(&action) {
+            println!(
+            "{0: <10} | {1: <10} | {2: <10} | {3: <10.3} | {4: <10.3} | {5: <10.4} | {6: <10.4} | {7: <10.4} | {8: <10.4e}",
+            action.name(),
+            stats.blocks,
+            stats.failures,
+            stats.duartion,
+            stats.bps,
+            stats.stats.min,
+            stats.stats.max,
+            stats.stats.mean,
+            stats.stats.variance,
+        );
+        }
+    }
+
+    let local_pow_string = if local_pow { "Local PoW" } else { "Remote PoW" };
+    let plot_title = format!(
+        "{} (MinPoWScore: {}, {})",
+        &Action::CreateAndPostBlock.name(),
+        min_pow_score,
+        local_pow_string
+    );
+    draw_action_measurements(&plot_title, &measurement, &folder_name);
 }
 
-pub async fn build_and_post_block_test(action: &Action, measurements: &mut Measurement) {
-    let number_of_tasks = 2;
-    let number_of_iterations = 10_000;
-    let local_pow = true;
-
+async fn build_and_post_block_test(
+    action: &Action,
+    measurements: &mut Measurement,
+    results: &mut HashMap<Action, BuildBlockAndPublishStatResult>,
+    number_of_tasks: usize,
+    number_of_iterations: usize,
+    local_pow: bool,
+) {
     let mut tasks = Vec::new();
     let mut result = MeasurementResult::new();
     let test_start = Instant::now();
@@ -75,7 +167,7 @@ pub async fn build_and_post_block_test(action: &Action, measurements: &mut Measu
                             match build_and_post_block(&client, network).await {
                                 Ok(_) => {
                                     let duration = start.elapsed();
-                                    action_measurements.push(duration);
+                                    action_measurements.push(duration.as_secs_f64());
                                 }
                                 Err(e) => {
                                     result.failures += 1;
@@ -118,23 +210,30 @@ pub async fn build_and_post_block_test(action: &Action, measurements: &mut Measu
     let number_of_blocks = number_of_tasks * number_of_iterations;
     let blocks_per_second = (number_of_blocks as f64) / test_duration.as_secs_f64();
 
-    info!("Task complete: Build and post block {}", action.name());
-    info!("Blocks: {:?}", number_of_blocks);
-    info!("BPS: {:.3}", blocks_per_second);
-    info!("Duration: {:.3}", test_duration.as_secs_f64());
-    info!("Failures: {:?}", result.failures);
+    // info!("Task complete: Build and post block {}", action.name());
+    // info!("Blocks: {:?}", number_of_blocks);
+    // info!("BPS: {:.3}", blocks_per_second);
+    // info!("Duration: {:.3}", test_duration.as_secs_f64());
+    // info!("Failures: {:?}", result.failures);
+    // print_measurement_stats(&result.measurement);
+
+    let mut result_stats = BuildBlockAndPublishStatResult {
+        blocks: number_of_blocks,
+        bps: blocks_per_second,
+        duartion: test_duration.as_secs_f64(),
+        failures: result.failures,
+        stats: Stats::default(),
+    };
 
     for (_action, durations) in &mut result.measurement {
-        let secs_f64: Vec<f64> = durations.iter().map(|d| d.as_secs_f64()).collect();
-        let stats = calculate_stats(secs_f64);
-        info!("Min: {:.3}", stats.min);
-        info!("Max: {:.3}", stats.max);
-        info!("Average: {:.3}", stats.average);
+        result_stats.stats = calculate_stats(durations);
 
         // Copy measurements
         let element = measurements.entry(*action).or_insert_with(Vec::new);
         element.append(durations);
     }
+
+    results.insert(*action, result_stats);
     info!("--------------------------------------------------");
 }
 

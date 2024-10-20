@@ -12,13 +12,17 @@ use iota_sdk::types::block::address::Bech32Address;
 use iota_sdk::types::block::address::Hrp;
 use log::info;
 use rand::distributions::DistString;
+use serde::Deserialize;
 use serde::Serialize;
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::fs::File;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use strum::EnumIter;
 
-pub type Measurement = HashMap<Action, Vec<std::time::Duration>>;
+pub type Measurement = HashMap<Action, Vec<f64>>;
 pub struct MeasurementResult {
     pub measurement: Measurement,
     pub failures: usize,
@@ -33,7 +37,7 @@ impl MeasurementResult {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IotaTangleNetwork {
     Localhost,
     Localhost2,
@@ -78,7 +82,7 @@ impl IotaTangleNetwork {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumIter)]
 pub enum Action {
     CreateDid,
     DeleteDid,
@@ -224,39 +228,52 @@ pub fn utf8_to_hex(utf8_data: &str) -> String {
     format!("0x{}", hex_string) // Prepend with "0x" for hex notation
 }
 
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, Default)]
 pub struct Stats {
     pub min: f64,
     pub max: f64,
-    pub average: f64,
+    pub mean: f64,
+    pub variance: f64,
 }
 
-pub fn calculate_stats(numbers: Vec<f64>) -> Stats {
+pub fn calculate_stats(numbers: &Vec<f64>) -> Stats {
     if numbers.is_empty() {
         // Return default values if the vector is empty
-        return Stats {
-            min: f64::INFINITY,
-            max: f64::NEG_INFINITY,
-            average: 0.0,
-        };
+        return Stats::default();
     }
-
-    // Calculate the minimum value
-    let min_value = numbers.iter().cloned().fold(f64::INFINITY, f64::min);
-
-    // Calculate the maximum value
-    let max_value = numbers.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-
-    // Calculate the average value
-    let sum: f64 = numbers.iter().sum();
-    let count = numbers.len();
-    let average_value = sum / count as f64;
-
-    // Return the Stats struct with the calculated values
     Stats {
-        min: min_value,
-        max: max_value,
-        average: average_value,
+        min: numbers.clone().min(),
+        max: numbers.clone().max(),
+        mean: numbers.clone().mean(),
+        variance: numbers.clone().variance(),
+    }
+}
+
+pub fn print_measurement_stats(measurement: &Measurement) {
+    println!(
+        "{0: <15} | {1: <10} | {2: <10} | {3: <10} | {4: <10}",
+        "Action", "Min", "Max", "Mean", "Variance"
+    );
+    for (action, durations) in measurement {
+        if durations.clone().variance() < 0.0001 {
+            println!(
+                "{0: <15} | {1: <10.4} | {2: <10.4} | {3: <10.4} | {4: <10.4e}",
+                action.name(),
+                durations.clone().min(),
+                durations.clone().max(),
+                durations.clone().mean(),
+                durations.clone().variance(),
+            );
+        } else {
+            println!(
+                "{0: <15} | {1: <10.4} | {2: <10.4} | {3: <10.4} | {4: <10.4}",
+                action.name(),
+                durations.clone().min(),
+                durations.clone().max(),
+                durations.clone().mean(),
+                durations.clone().variance(),
+            );
+        };
     }
 }
 
@@ -271,4 +288,32 @@ pub fn wait_until_enter_pressed() {
     io::stdin().read_line(&mut input).unwrap();
 
     info!("Continuing...");
+}
+
+pub fn save_to_results_file(data: String, folder_path: &str) -> anyhow::Result<()> {
+    let file_name = format!("{}/results", folder_path);
+
+    // Create a file and write the JSON string to it
+    let mut file = File::create(file_name)?;
+    file.write_all(data.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn save_to_raw_data_file(data: String, folder_path: &str) -> anyhow::Result<()> {
+    let file_name = format!("{}/raw_data", folder_path);
+
+    // Create a file and write the JSON string to it
+    let mut file = File::create(file_name)?;
+    file.write_all(data.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn load_from_file(folder_path: &str) -> anyhow::Result<String> {
+    let file_name = format!("{}/raw_data", folder_path);
+
+    let json_data = read_to_string(file_name)?;
+    // let my_struct: MyStruct = from_str(&json_data).unwrap();
+    Ok(json_data)
 }

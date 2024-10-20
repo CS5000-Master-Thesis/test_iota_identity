@@ -40,7 +40,7 @@ pub async fn resolve_did_test() {
             draw_action_measurements(
                 &IotaTangleNetwork::Localhost.name(),
                 &measurement,
-                folder_name,
+                &folder_name,
             );
         }
         Err(e) => {
@@ -87,7 +87,7 @@ async fn spawn_tasks(
                                 Ok(resolved_document) => {
                                     assert_eq!(did, *resolved_document.id());
                                     let duration = start.elapsed();
-                                    action_measurements.push(duration);
+                                    action_measurements.push(duration.as_secs_f64());
                                 }
                                 Err(e) => {
                                     warn!("Error: {:?}", e);

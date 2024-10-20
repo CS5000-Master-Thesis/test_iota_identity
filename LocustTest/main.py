@@ -63,34 +63,34 @@ FAUCET_URL = 'http://localhost:8091/api/enqueue'
 ########################################################################################
 
 
-# class BlockIotaUser(User):
-#     wait_time = between(1, 3)
+class BlockIotaUser(User):
+    wait_time = between(1, 3)
 
-#     def on_start(self):
-#         self.client = Client(nodes=[NODE_URL])
+    def on_start(self):
+        self.client = Client(nodes=[NODE_URL])
 
-#     @task
-#     def build_and_post_block(self):
-#         start_time = time.time()
-#         exep = None
+    @task
+    def build_and_post_block(self):
+        start_time = time.time()
+        exep = None
 
-#         try:
-#             block = self.client.build_and_post_block(tag=utf8_to_hex('hello'), data=utf8_to_hex('hello'))
-#         except Exception as e:
-#             exep = Exception(f"Error: {e}")
+        try:
+            block = self.client.build_and_post_block(tag=utf8_to_hex('hello'), data=utf8_to_hex('hello'))
+        except Exception as e:
+            exep = Exception(f"Error: {e}")
 
-#         # print("Publishing block")
+        # print("Publishing block")
 
-#         total_time = int((time.time() - start_time) * 1000)
+        total_time = int((time.time() - start_time) * 1000)
 
-#         events.request.fire(
-#                 request_type="IOTA",
-#                 name="post_block",
-#                 response_time=total_time,
-#                 response_length=0,
-#                 exception=exep,
-#                 context={},
-#             )
+        events.request.fire(
+                request_type="IOTA",
+                name="post_block",
+                response_time=total_time,
+                response_length=0,
+                exception=exep,
+                context={},
+            )
 
 
 
